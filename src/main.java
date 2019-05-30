@@ -1,9 +1,10 @@
-import com.sun.org.apache.xpath.internal.operations.Bool;
-
+import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.html.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.sql.*;
 import java.util.Scanner;
+import java.util.List;
 import java.io.FileReader;
 
 public class main {
@@ -57,6 +58,13 @@ public class main {
         System.out.println("- Min/Max item since date");
         System.out.println("- Exit");
         System.out.print("Command:");
+
+
+
+        //test addItemPriceAuto
+        //addItemPriceAuto("Pirate Hat");
+
+
 
         while (true) {
             String input = scanner.nextLine();  // Read user input
@@ -125,6 +133,7 @@ public class main {
             stmt.close();
         } catch(SQLException se){
             se.printStackTrace();
+            System.out.println("Sql exception");
         }
     }
 
@@ -150,6 +159,7 @@ public class main {
             stmt.close();
         } catch(SQLException se){
             se.printStackTrace();
+            System.out.println("Sql exception 2");
         }
     }
 
@@ -173,6 +183,7 @@ public class main {
             stmt.close();
         } catch(SQLException se){
             se.printStackTrace();
+            System.out.println("Sql exception 3");
         }
     }
 
@@ -226,4 +237,81 @@ public class main {
     }
     */
 
+
+    //Scrapes "http://db.kakia.org/" to find item price and insert into database
+    //first navigate to the url
+    //find the search bar ui element and search our string item
+    //maybe can shortcut this step by putting into url http://db.kakia.org/search/item (but its a single page
+    //application? so maybe can't do this have to search up
+    //then find all <span> tag elements and put in list, loop through all of them to find the inner text that matches
+    //our search string completely
+    //can do some more magic to do it smarter separate english and japanese
+    //then find the data row of this element and get the hidden row price to exctract ship 2's price
+    //(or any ship we want) and insert to database
+
+
+    public static void addItemPriceAuto(String item) {
+        WebClient client = new WebClient();
+        //makes it faster since we don't need to see page
+        //client.getOptions().setCssEnabled(false);
+        //client.getOptions().setJavaScriptEnabled(false);
+        try {
+            HtmlPage page = client.getPage("http://db.kakia.org/");
+            DomNodeList inputs = page.getElementsByTagName("input");
+            if (inputs.getLength() < 1) {
+                System.out.println(("Could not find the search widget"));
+                return;
+            }
+            for (int i = 0; i < inputs.getLength(); i++) {
+                HtmlInput input = (HtmlInput) inputs.get(i);
+                //should check if input == search, not sure why placeholder returning ..
+                System.out.println(input.getPlaceholder());
+                if (input.getPlaceholder().equals("Search")) {
+                    input.setValueAttribute(item);
+                    System.out.println("hello");
+                    break;
+                }
+            }
+
+            //what we want is contained in span type elements
+            //maybe get smarter html selector for now try this
+            //learn xpath?
+
+            /*
+            Thread.sleep(5000);
+            DomNodeList spanList = page.getElementsByTagName("span");
+            for (int i = 0; i < spanList.getLength(); i++) {
+                HtmlElement element = (HtmlElement) spanList.get(i);
+                //should check if input == search, not sure why placeholder returning ..
+                System.out.println(element.asText());
+                if (element.asText().equals(item)) {
+                    System.out.println("working");
+                    break;
+
+                }
+            }
+            */
+
+            /*
+            Thread.sleep(5000);
+            DomNodeList tableRows = page.getElementsByTagName("tr");
+            for (int i = 0; i < tableRows.getLength(); i++) {
+                TableRowGroup tr = (TableRowGroup) tableRows.get(i);
+                List<HtmlTableRow> listOfTd = tr.getRows();
+                //fourth td is english name
+                //seventh td is hidden class, price json list
+                //System.out.println(listOfTd.get(3).getChildren();
+                if (element.asText().equals(item)) {
+                    System.out.println("working");
+                    break;
+
+                }
+            }
+            */
+
+        }catch(Exception e){
+            e.printStackTrace();
+            System.out.println("Something wrong");
+        }
+    }
 }
